@@ -49,7 +49,9 @@ public class SwiftDown: UITextView, UITextViewDelegate {
     }
 
     public override func willMove(toSuperview newSuperview: UIView?) {
-        self.highlighter = SwiftDownHighlighter(textView: self)
+        Task { @MainActor in
+            self.highlighter = SwiftDownHighlighter(textView: self)
+        }
     }
 }
 #else
@@ -194,11 +196,13 @@ public class SwiftDown: NSView {
         ])
     }
 
+    @MainActor
     func setupTextView() {
         scrollView.documentView = textView
         highlighter = SwiftDownHighlighter(textView: textView)
     }
 
+    @MainActor
     func applyStyles() {
         assert(highlighter != nil)
         highlighter.applyStyles()

@@ -170,7 +170,9 @@ public struct SwiftDownEditor: NSViewRepresentable {
     public func makeNSView(context: Context) -> SwiftDown {
         let swiftDown = SwiftDown(theme: theme, isEditable: isEditable, insetsSize: insetsSize)
         swiftDown.delegate = context.coordinator
-        swiftDown.setupTextView()
+        Task { @MainActor in
+            swiftDown.setupTextView()
+        }
         swiftDown.text = text
         return swiftDown
     }
