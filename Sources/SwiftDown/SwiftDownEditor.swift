@@ -25,8 +25,6 @@ public struct SwiftDownEditor: UIViewRepresentable {
     private(set) var autocapitalizationType: UITextAutocapitalizationType = .sentences
     private(set) var autocorrectionType: UITextAutocorrectionType = .default
     private(set) var keyboardType: UIKeyboardType = .default
-    private(set) var hasKeyboardToolbar: Bool = true
-    private(set) var hasTopToolbar: Bool = false
     private(set) var textAlignment: TextAlignment = .leading
 
     public var onTextChange: (String) -> Void = { _ in }
@@ -52,7 +50,6 @@ public struct SwiftDownEditor: UIViewRepresentable {
         swiftDown.isEditable = isEditable
         swiftDown.isScrollEnabled = true
         swiftDown.keyboardType = keyboardType
-        swiftDown.hasKeyboardToolbar = hasKeyboardToolbar && !hasTopToolbar
         swiftDown.autocapitalizationType = autocapitalizationType
         swiftDown.autocorrectionType = autocorrectionType
         swiftDown.textContainerInset = UIEdgeInsets(
@@ -65,54 +62,43 @@ public struct SwiftDownEditor: UIViewRepresentable {
         // Store reference for markdown actions
         context.coordinator.swiftDownTextView = swiftDown
 
-        if hasTopToolbar {
-            // Create container with toolbar at top
-            let containerView = UIView()
-            
-            // Create SwiftUI toolbar as UIHostingController
-            let toolbar = MarkdownToolbar { action in
-                swiftDown.performMarkdownAction(action)
-            }
-            let toolbarController = UIHostingController(rootView: toolbar)
-            toolbarController.view.translatesAutoresizingMaskIntoConstraints = false
-            
-            // Add both views to container
-            containerView.addSubview(toolbarController.view)
-            containerView.addSubview(swiftDown)
-            
-            swiftDown.translatesAutoresizingMaskIntoConstraints = false
-            
-            // Set up constraints
-            NSLayoutConstraint.activate([
-                // Toolbar at top
-                toolbarController.view.topAnchor.constraint(equalTo: containerView.topAnchor),
-                toolbarController.view.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-                toolbarController.view.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-                toolbarController.view.heightAnchor.constraint(equalToConstant: 44),
-                
-                // Text editor below toolbar
-                swiftDown.topAnchor.constraint(equalTo: toolbarController.view.bottomAnchor),
-                swiftDown.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-                swiftDown.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-                swiftDown.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
-            ])
-            
-            return containerView
-        } else {
-            // No top toolbar, return SwiftDown directly
-            return swiftDown
+        // Create container with toolbar at top
+        let containerView = UIView()
+        
+        // Create SwiftUI toolbar as UIHostingController
+        let toolbar = MarkdownToolbar { action in
+            swiftDown.performMarkdownAction(action)
         }
+        let toolbarController = UIHostingController(rootView: toolbar)
+        toolbarController.view.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Add both views to container
+        containerView.addSubview(toolbarController.view)
+        containerView.addSubview(swiftDown)
+        
+        swiftDown.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Set up constraints
+        NSLayoutConstraint.activate([
+            // Toolbar at top
+            toolbarController.view.topAnchor.constraint(equalTo: containerView.topAnchor),
+            toolbarController.view.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            toolbarController.view.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            toolbarController.view.heightAnchor.constraint(equalToConstant: 44),
+            
+            // Text editor below toolbar
+            swiftDown.topAnchor.constraint(equalTo: toolbarController.view.bottomAnchor),
+            swiftDown.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            swiftDown.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            swiftDown.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
+        ])
+        
+        return containerView
     }
 
     public func updateUIView(_ uiView: UIView, context: Context) {
-        // Get the SwiftDown text view (either directly or from container)
-        let swiftDown: SwiftDown
-        if let directSwiftDown = uiView as? SwiftDown {
-            swiftDown = directSwiftDown
-        } else if let containerView = uiView as? UIView,
-                  let textView = context.coordinator.swiftDownTextView {
-            swiftDown = textView
-        } else {
+        // Get the SwiftDown text view from coordinator
+        guard let swiftDown = context.coordinator.swiftDownTextView else {
             return
         }
         
@@ -186,17 +172,6 @@ extension SwiftDownEditor {
         return new
     }
 
-    public func hasKeyboardToolbar(_ hasKeyboardToolbar: Bool) -> Self {
-        var editor = self
-        editor.hasKeyboardToolbar = hasKeyboardToolbar
-        return editor
-    }
-    
-    public func hasTopToolbar(_ hasTopToolbar: Bool) -> Self {
-        var editor = self
-        editor.hasTopToolbar = hasTopToolbar
-        return editor
-    }
 }
 
 #else
