@@ -5,6 +5,18 @@
 //  Created by Quentin Eude on 16/03/2021.
 //
 
+// MARK: - Shared Types
+public enum MarkdownAction {
+    case heading(Int)
+    case bold
+    case italic
+    case unorderedList
+    case orderedList
+    case blockQuote
+    case link
+    case codeBlock
+}
+
 #if os(iOS)
 import UIKit
 
@@ -51,6 +63,34 @@ public class SwiftDown: UITextView, UITextViewDelegate {
     public override func willMove(toSuperview newSuperview: UIView?) {
         Task { @MainActor in
             self.highlighter = SwiftDownHighlighter(textView: self)
+        }
+    }
+
+    // MARK: - Public Markdown Actions for SwiftUI Integration
+    public func performMarkdownAction(_ action: MarkdownAction) {
+        switch action {
+        case .heading(1):
+            h1Action()
+        case .heading(2):
+            h2Action()
+        case .heading(3):
+            h3Action()
+        case .heading:
+            break // Only support H1-H3
+        case .bold:
+            boldAction()
+        case .italic:
+            italicizeAction()
+        case .unorderedList:
+            unorderedListAction()
+        case .orderedList:
+            orderedListAction()
+        case .blockQuote:
+            blockQuoteAction()
+        case .link:
+            linkAction()
+        case .codeBlock:
+            codeBlockAction()
         }
     }
 }
@@ -206,6 +246,12 @@ public class SwiftDown: NSView {
     func applyStyles() {
         assert(highlighter != nil)
         highlighter.applyStyles()
+    }
+
+    // MARK: - Markdown Actions Stub (macOS doesn't have toolbar)
+    public func performMarkdownAction(_ action: MarkdownAction) {
+        // No-op for macOS - this is primarily for iOS SwiftUI toolbar integration
+        // macOS uses standard keyboard shortcuts and menu items
     }
 }
 #endif

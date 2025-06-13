@@ -26,6 +26,7 @@ public struct SwiftDownEditor: UIViewRepresentable {
     private(set) var autocorrectionType: UITextAutocorrectionType = .default
     private(set) var keyboardType: UIKeyboardType = .default
     private(set) var hasKeyboardToolbar: Bool = true
+    private(set) var hasTopToolbar: Bool = false
     private(set) var textAlignment: TextAlignment = .leading
 
     public var onTextChange: (String) -> Void = { _ in }
@@ -42,7 +43,7 @@ public struct SwiftDownEditor: UIViewRepresentable {
         self.onSelectionChange = onSelectionChange
     }
 
-    public func makeUIView(context: Context) -> SwiftDown {
+    public func makeUIView(context: Context) -> UIView {
         let swiftDown = SwiftDown(frame: .zero, theme: theme)
         swiftDown.storage.markdowner = { self.engine.render($0, offset: $1) }
         swiftDown.storage.applyMarkdown = { m in Theme.applyMarkdown(markdown: m, with: self.theme) }
@@ -61,10 +62,49 @@ public struct SwiftDownEditor: UIViewRepresentable {
         swiftDown.textColor = theme.tintColor
         swiftDown.text = text
 
-        return swiftDown
+        // Store reference for markdown actions
+        context.coordinator.swiftDownTextView = swiftDown
+
+        if hasTopToolbar {
+            // Create container with toolbar at top
+            let containerView = UIView()
+            
+            // Create SwiftUI toolbar as UIHostingController
+            let toolbar = MarkdownToolbar { action in
+                swiftDown.performMarkdownAction(action)
+            }
+            let toolbarController = UIHostingController(rootView: toolbar)
+            toolbarController.view.translatesAutoresizingMaskIntoConstraints = false
+            
+            // Add both views to container
+            containerView.addSubview(toolbarController.view)
+            containerView.addSubview(swiftDown)
+            
+            swiftDown.translatesAutoresizingMaskIntoConstraints = false
+            
+            // Set up constraints
+            NSLayoutConstraint.activate([
+                // Toolbar at top
+                toolbarController.view.topAnchor.constraint(equalTo: containerView.topAnchor),
+                toolbarController.view.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+                toolbarController.view.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+                toolbarController.view.heightAnchor.constraint(equalToConstant: 44),
+                
+                // Text editor below toolbar
+                swiftDown.topAnchor.constraint(equalTo: toolbarController.view.bottomAnchor),
+                swiftDown.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+                swiftDown.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+                swiftDown.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
+            ])
+            
+            return containerView
+        } else {
+            // No top toolbar, return SwiftDown directly
+            return swiftDown
+        }
     }
 
-    public func updateUIView(_ uiView: SwiftDown, context: Context) {
+    public func updateUIView(_ uiView: UIView, context: Context) {
         context.coordinator.cancellable?.cancel()
         context.coordinator.cancellable = Timer
             .publish(every: debounceTime, on: .current, in: .default)
@@ -88,6 +128,7 @@ extension SwiftDownEditor {
     public class Coordinator: NSObject, UITextViewDelegate {
         var cancellable: Cancellable?
         var parent: SwiftDownEditor
+        weak var swiftDownTextView: SwiftDown?
 
         init(_ parent: SwiftDownEditor) {
             self.parent = parent

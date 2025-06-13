@@ -77,7 +77,7 @@
         }
 
         /// Moves the cursor position after the inserted characters
-        @objc private func h1Action() {
+        @objc internal func h1Action() {
             let selectedStart = self.selectedStart
             self.text.insert(contentsOf: "# ", at: self.text.index(self.text.startIndex, offsetBy: selectedStart))
             self.moveCursor(selectedStart + 2)
@@ -85,7 +85,7 @@
         }
 
         /// Moves the cursor position after the inserted characters
-        @objc private func h2Action() {
+        @objc internal func h2Action() {
             let selectedStart = self.selectedStart
             self.text.insert(contentsOf: "## ", at: self.text.index(self.text.startIndex, offsetBy: selectedStart))
             self.moveCursor(selectedStart + 3)
@@ -93,7 +93,7 @@
         }
 
         /// Moves the cursor position after the inserted characters
-        @objc private func h3Action() {
+        @objc internal func h3Action() {
             let selectedStart = self.selectedStart
             self.text.insert(contentsOf: "### ", at: self.text.index(self.text.startIndex, offsetBy: selectedStart))
             self.moveCursor(selectedStart + 4)
@@ -102,7 +102,7 @@
 
         /// If text is selected, surrounds the selected text with the bold tags
         /// Moves the cursor to the end of the selected text, if applicable
-        @objc private func boldAction() {
+        @objc internal func boldAction() {
             let selectedStart = self.selectedStart
             let selectedEnd = self.selectedEnd
             self.text.insert(contentsOf: "**", at: self.text.index(self.text.startIndex, offsetBy: selectedStart))
@@ -113,7 +113,7 @@
 
         /// If text is selected, surrounds the selected text with the italic tags
         /// Moves the cursor to the end of the selected text, if applicable
-        @objc private func italicizeAction() {
+        @objc internal func italicizeAction() {
             let selectedStart = self.selectedStart
             let selectedEnd = self.selectedEnd
             self.text.insert(contentsOf: "*", at: self.text.index(self.text.startIndex, offsetBy: selectedStart))
@@ -123,7 +123,7 @@
         }
 
         /// Adds 1 leading line break
-        @objc private func unorderedListAction() {
+        @objc internal func unorderedListAction() {
             let selectedStart = self.selectedStart
             self.text.insert(contentsOf: "\n- ", at: self.text.index(self.text.startIndex, offsetBy: selectedStart))
             self.moveCursor(selectedStart + 3)
@@ -131,14 +131,14 @@
         }
 
         /// Adds 1 leading line break
-        @objc private func orderedListAction() {
+        @objc internal func orderedListAction() {
             let selectedStart = self.selectedStart
             self.text.insert(contentsOf: "\n1. ", at: self.text.index(self.text.startIndex, offsetBy: selectedStart))
             self.moveCursor(selectedStart + 3)
             self.highlighter?.applyStyles()
         }
 
-        @objc private func blockQuoteAction() {
+        @objc internal func blockQuoteAction() {
             let selectedStart = self.selectedStart
             self.text.insert(contentsOf: "> ", at: self.text.index(self.text.startIndex, offsetBy: selectedStart))
             self.highlighter?.applyStyles()
@@ -148,7 +148,7 @@
         ///   If a link is detected, the selected text is placed inside the braces
         ///   If a link is not detected, the selected text is placed inside the parenthesis
         /// Moves the cursor into the text bracket or parenthesis as applicable
-        @objc private func linkAction() {
+        @objc internal func linkAction() {
             let selectedStart = self.selectedStart
             let selectedEnd = self.selectedEnd
             if self.containsLink {
@@ -177,7 +177,7 @@
 
         /// If text is selected, moves the selected text inside the code block
         /// Moves the cursor into the code block at the end of the selected text, if applicable
-        @objc private func codeBlockAction() {
+        @objc internal func codeBlockAction() {
             let selectedStart = self.selectedStart
             let selectedEnd = self.selectedEnd
             self.text.insert(
