@@ -52,7 +52,7 @@ public struct SwiftDownEditor: UIViewRepresentable {
         swiftDown.isEditable = isEditable
         swiftDown.isScrollEnabled = true
         swiftDown.keyboardType = keyboardType
-        swiftDown.hasKeyboardToolbar = hasKeyboardToolbar
+        swiftDown.hasKeyboardToolbar = hasKeyboardToolbar && !hasTopToolbar
         swiftDown.autocapitalizationType = autocapitalizationType
         swiftDown.autocorrectionType = autocorrectionType
         swiftDown.textContainerInset = UIEdgeInsets(
@@ -105,16 +105,27 @@ public struct SwiftDownEditor: UIViewRepresentable {
     }
 
     public func updateUIView(_ uiView: UIView, context: Context) {
+        // Get the SwiftDown text view (either directly or from container)
+        let swiftDown: SwiftDown
+        if let directSwiftDown = uiView as? SwiftDown {
+            swiftDown = directSwiftDown
+        } else if let containerView = uiView as? UIView,
+                  let textView = context.coordinator.swiftDownTextView {
+            swiftDown = textView
+        } else {
+            return
+        }
+        
         context.coordinator.cancellable?.cancel()
         context.coordinator.cancellable = Timer
             .publish(every: debounceTime, on: .current, in: .default)
             .autoconnect()
             .first()
             .sink { _ in
-                let selectedRange = uiView.selectedRange
-                uiView.text = text
-                uiView.highlighter?.applyStyles()
-                uiView.selectedRange = selectedRange
+                let selectedRange = swiftDown.selectedRange
+                swiftDown.text = text
+                swiftDown.highlighter?.applyStyles()
+                swiftDown.selectedRange = selectedRange
             }
     }
 
@@ -180,7 +191,14 @@ extension SwiftDownEditor {
         editor.hasKeyboardToolbar = hasKeyboardToolbar
         return editor
     }
+    
+    public func hasTopToolbar(_ hasTopToolbar: Bool) -> Self {
+        var editor = self
+        editor.hasTopToolbar = hasTopToolbar
+        return editor
+    }
 }
+
 #else
 // MARK: - SwiftDownEditor macOS
 public struct SwiftDownEditor: NSViewRepresentable {
