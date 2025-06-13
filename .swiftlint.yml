@@ -31,14 +31,14 @@ force_try:
   severity: warning # explicitly
 # rules that have both warning and error levels, can set just the warning level
 # implicitly
-line_length: 110
+line_length: 120
 # they can set both implicitly with an array
 type_body_length:
   - 300 # warning
   - 400 # error
 # or they can set both explicitly
 indentation_width:
-  indentation_width: 2
+  indentation_width: 4
 file_length:
   warning: 500
   error: 1200
