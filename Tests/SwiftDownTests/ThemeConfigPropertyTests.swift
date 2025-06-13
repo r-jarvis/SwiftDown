@@ -1,22 +1,27 @@
-import XCTest
-import Nimble
+import Testing
+import Foundation
 
 @testable import SwiftDown
 
-final class ThemConfigPropertyTests: XCTestCase {
-  func testUnknowConfigProperty() {
-    expect(ConfigProperty.from(rawValue: "test")).to(equal(.unknown))
+@Suite("Theme Config Property Tests")
+struct ThemeConfigPropertyTests {
+  @Test("Unknown config property")
+  func unknownConfigProperty() {
+    #expect(ConfigProperty.from(rawValue: "test") == .unknown)
   }
   
-  func testUnknowEditorConfigProperty() {
-    expect(EditorConfigProperty.from(rawValue: "test")).to(equal(.unknown))
+  @Test("Unknown editor config property")
+  func unknownEditorConfigProperty() {
+    #expect(EditorConfigProperty.from(rawValue: "test") == .unknown)
   }
   
-  func testUnknowStyleConfigPropertyProperty() {
-    expect(StyleConfigProperty.from(rawValue: "test")).to(equal(.unknown))
+  @Test("Unknown style config property")
+  func unknownStyleConfigProperty() {
+    #expect(StyleConfigProperty.from(rawValue: "test") == .unknown)
   }
   
-  func testUnknowTraitConfigPropertyPropertyProperty() {
-    expect(TraitConfigProperty.from(rawValue: "test")).to(equal(.unknown))
+  @Test("Unknown trait config property")
+  func unknownTraitConfigProperty() {
+    #expect(TraitConfigProperty.from(rawValue: "test") == .unknown)
   }
 }

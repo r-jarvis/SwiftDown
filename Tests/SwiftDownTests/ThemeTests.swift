@@ -1,26 +1,30 @@
-import XCTest
-import Nimble
+import Testing
+import Foundation
 
 @testable import SwiftDown
 
-final class ThemeTests: XCTestCase {
-  func testParsingTheme() {
+@Suite("Theme Tests")
+struct ThemeTests {
+  @Test("Parse theme colors")
+  func parsingTheme() {
     let theme = Theme.BuiltIn.defaultDark.theme()
-    expect(theme.backgroundColor).to(equal(UniversalColor(hexString: "#1D1F21")))
-    expect(theme.tintColor).to(equal(UniversalColor(hexString: "#A1A8B5")))
-    expect(theme.cursorColor).to(equal(UniversalColor(hexString: "#A1A8B5")))
+    #expect(theme.backgroundColor == UniversalColor(hexString: "#1D1F21"))
+    #expect(theme.tintColor == UniversalColor(hexString: "#A1A8B5"))
+    #expect(theme.cursorColor == UniversalColor(hexString: "#A1A8B5"))
   }
   
-  func testParsingThemeStyles() {
+  @Test("Parse theme styles")
+  func parsingThemeStyles() {
     let theme = Theme.BuiltIn.defaultDark.theme()
-    expect(theme.styles).to(haveCount(15))
+    #expect(theme.styles.count == 15)
   }
 
   #if arch(x86_64)
-  func testInitNonExistingFile() {
-    expect {
+  @Test("Initialize with non-existing file throws")
+  func initNonExistingFile() {
+    #expect(throws: (any Error).self) {
       _ = Theme("non_existing_file")
-    }.to(throwAssertion())
+    }
   }
   #endif
 }

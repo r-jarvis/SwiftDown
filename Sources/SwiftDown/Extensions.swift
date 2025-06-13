@@ -86,8 +86,7 @@ extension UniversalFont {
       return self.withSize(size)
     }
 
-    let descriptor =
-      fontDescriptor.withSymbolicTraits(traits) ?? UniversalFontDescriptor(fontAttributes: [:])
+    let descriptor = fontDescriptor.withSymbolicTraits(traits)
 
     return UniversalFont(descriptor: descriptor, size: size)
   }
