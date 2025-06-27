@@ -11,17 +11,19 @@ import Combine
 
 #if os(iOS)
 // MARK: - SwiftDownEditor iOS
-public struct SwiftDownEditor: UIViewRepresentable {
+public struct SwiftDownEditor: View {
+    @Binding var text: String
+    @Environment(\.markdownTheme) private var environmentTheme
+    
     private var debounceTime = 0.3
-    @Binding var text: String {
-        didSet {
-            onTextChange(text)
-        }
-    }
-
     private(set) var isEditable: Bool = true
-    private(set) var theme: Theme = Theme.BuiltIn.defaultDark.theme()
+    private(set) var theme: Theme? = nil
     private(set) var insetsSize: CGFloat = 0
+    
+    // Computed property that prefers explicit theme, falls back to environment
+    private var resolvedTheme: Theme {
+        theme ?? environmentTheme
+    }
     private(set) var autocapitalizationType: UITextAutocapitalizationType = .sentences
     private(set) var autocorrectionType: UITextAutocorrectionType = .default
     private(set) var keyboardType: UIKeyboardType = .default
@@ -40,8 +42,49 @@ public struct SwiftDownEditor: UIViewRepresentable {
         self.onTextChange = onTextChange
         self.onSelectionChange = onSelectionChange
     }
+    
+    @State private var coordinatorRef: SwiftDownTextView.Coordinator?
+    
+    public var body: some View {
+        VStack(spacing: 0) {
+            MarkdownToolbar { action in
+                coordinatorRef?.swiftDownTextView?.performMarkdownAction(action)
+            }
+            .frame(height: 44)
+            
+            SwiftDownTextView(
+                text: $text,
+                theme: resolvedTheme,
+                isEditable: isEditable,
+                insetsSize: insetsSize,
+                autocapitalizationType: autocapitalizationType,
+                autocorrectionType: autocorrectionType,
+                keyboardType: keyboardType,
+                textAlignment: textAlignment,
+                onTextChange: onTextChange,
+                onSelectionChange: onSelectionChange,
+                coordinatorRef: $coordinatorRef
+            )
+        }
+    }
+}
 
-    public func makeUIView(context: Context) -> UIView {
+// MARK: - SwiftDownTextView (UIViewRepresentable)
+struct SwiftDownTextView: UIViewRepresentable {
+    @Binding var text: String
+    let theme: Theme
+    let isEditable: Bool
+    let insetsSize: CGFloat
+    let autocapitalizationType: UITextAutocapitalizationType
+    let autocorrectionType: UITextAutocorrectionType
+    let keyboardType: UIKeyboardType
+    let textAlignment: TextAlignment
+    let onTextChange: (String) -> Void
+    let onSelectionChange: (NSRange) -> Void
+    @Binding var coordinatorRef: Coordinator?
+    let engine = MarkdownEngine()
+
+    func makeUIView(context: Context) -> SwiftDown {
         let swiftDown = SwiftDown(frame: .zero, theme: theme)
         swiftDown.storage.markdowner = { self.engine.render($0, offset: $1) }
         swiftDown.storage.applyMarkdown = { m in Theme.applyMarkdown(markdown: m, with: self.theme) }
@@ -61,6 +104,7 @@ public struct SwiftDownEditor: UIViewRepresentable {
 
         // Store reference for markdown actions
         context.coordinator.swiftDownTextView = swiftDown
+<<<<<<< HEAD
 
         // Create container with toolbar at top
         let containerView = UIView()
@@ -100,48 +144,63 @@ public struct SwiftDownEditor: UIViewRepresentable {
         // Get the SwiftDown text view from coordinator
         guard let swiftDown = context.coordinator.swiftDownTextView else {
             return
+=======
+        
+        // Update coordinator reference in parent
+        DispatchQueue.main.async {
+            coordinatorRef = context.coordinator
+>>>>>>> 59e296d (Modernize SwiftDownEditor with environment themes and always-visible toolbar)
         }
         
-        context.coordinator.cancellable?.cancel()
-        context.coordinator.cancellable = Timer
-            .publish(every: debounceTime, on: .current, in: .default)
-            .autoconnect()
-            .first()
-            .sink { _ in
-                let selectedRange = swiftDown.selectedRange
-                swiftDown.text = text
-                swiftDown.highlighter?.applyStyles()
-                swiftDown.selectedRange = selectedRange
-            }
+        return swiftDown
     }
 
-    public func makeCoordinator() -> Coordinator {
-        Coordinator(self)
+    func updateUIView(_ uiView: SwiftDown, context: Context) {
+        guard uiView.text != text else { return }
+        
+        let selectedRange = uiView.selectedRange
+        uiView.text = text
+        uiView.highlighter?.applyStyles()
+        uiView.selectedRange = selectedRange
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(
+            onTextChange: { newText in
+                text = newText
+                onTextChange(newText)
+            },
+            onSelectionChange: onSelectionChange
+        )
     }
 }
 
-// MARK: - SwiftDownEditor iOS Coordinator
-extension SwiftDownEditor {
-    public class Coordinator: NSObject, UITextViewDelegate {
-        var cancellable: Cancellable?
-        var parent: SwiftDownEditor
+// MARK: - SwiftDownTextView Coordinator
+extension SwiftDownTextView {
+    class Coordinator: NSObject, UITextViewDelegate {
+        let onTextChange: (String) -> Void
+        let onSelectionChange: (NSRange) -> Void
         weak var swiftDownTextView: SwiftDown?
 
-        init(_ parent: SwiftDownEditor) {
-            self.parent = parent
+        init(onTextChange: @escaping (String) -> Void, onSelectionChange: @escaping (NSRange) -> Void) {
+            self.onTextChange = onTextChange
+            self.onSelectionChange = onSelectionChange
         }
 
-        public func textViewDidChange(_ textView: UITextView) {
+        func textViewDidChange(_ textView: UITextView) {
             guard textView.markedTextRange == nil else { return }
-
-            DispatchQueue.main.async {
-                self.parent.text = textView.text
+            
+            // Apply syntax highlighting immediately
+            if let swiftDown = textView as? SwiftDown {
+                swiftDown.highlighter?.applyStyles()
             }
+            
+            onTextChange(textView.text)
         }
 
-        public func textViewDidChangeSelection(_ textView: UITextView) {
+        func textViewDidChangeSelection(_ textView: UITextView) {
             guard textView.markedTextRange == nil else { return }
-            self.parent.onSelectionChange(textView.selectedRange)
+            onSelectionChange(textView.selectedRange)
         }
     }
 }
@@ -266,12 +325,6 @@ extension SwiftDownEditor {
         return editor
     }
 
-    public func theme(_ theme: Theme) -> Self {
-        var editor = self
-        editor.theme = theme
-        return editor
-    }
-
     public func isEditable(_ isEditable: Bool) -> Self {
         var editor = self
         editor.isEditable = isEditable
@@ -282,5 +335,18 @@ extension SwiftDownEditor {
         var editor = self
         editor.debounceTime = debounceTime
         return editor
+    }
+    public func theme(_ theme: Theme) -> Self {
+        var editor = self
+        editor.theme = theme
+        return editor
+    }
+}
+
+// MARK: - SwiftUI View Extensions for Environment Theme
+public extension View {
+    /// Sets the markdown theme for all SwiftDownEditor instances in the view hierarchy
+    func markdownTheme(_ theme: Theme) -> some View {
+        environment(\.markdownTheme, theme)
     }
 }

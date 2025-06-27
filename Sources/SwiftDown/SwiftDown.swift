@@ -89,6 +89,168 @@ public class SwiftDown: UITextView, UITextViewDelegate {
             codeBlockAction()
         }
     }
+    
+    // MARK: - Markdown Action Methods
+    /// Moves the cursor position after the inserted characters
+    @objc internal func h1Action() {
+        let selectedStart = self.selectedStart
+        self.text.insert(contentsOf: "# ", at: self.text.index(self.text.startIndex, offsetBy: selectedStart))
+        self.moveCursor(selectedStart + 2)
+        self.highlighter?.applyStyles()
+    }
+
+    /// Moves the cursor position after the inserted characters
+    @objc internal func h2Action() {
+        let selectedStart = self.selectedStart
+        self.text.insert(contentsOf: "## ", at: self.text.index(self.text.startIndex, offsetBy: selectedStart))
+        self.moveCursor(selectedStart + 3)
+        self.highlighter?.applyStyles()
+    }
+
+    /// Moves the cursor position after the inserted characters
+    @objc internal func h3Action() {
+        let selectedStart = self.selectedStart
+        self.text.insert(contentsOf: "### ", at: self.text.index(self.text.startIndex, offsetBy: selectedStart))
+        self.moveCursor(selectedStart + 4)
+        self.highlighter?.applyStyles()
+    }
+
+    /// If text is selected, surrounds the selected text with the bold tags
+    /// Moves the cursor to the end of the selected text, if applicable
+    @objc internal func boldAction() {
+        let selectedStart = self.selectedStart
+        let selectedEnd = self.selectedEnd
+        self.text.insert(contentsOf: "**", at: self.text.index(self.text.startIndex, offsetBy: selectedStart))
+        self.text.insert(contentsOf: "**", at: self.text.index(self.text.startIndex, offsetBy: selectedEnd + 2))
+        self.moveCursor(selectedEnd + 2)
+        self.highlighter?.applyStyles()
+    }
+
+    /// If text is selected, surrounds the selected text with the italic tags
+    /// Moves the cursor to the end of the selected text, if applicable
+    @objc internal func italicizeAction() {
+        let selectedStart = self.selectedStart
+        let selectedEnd = self.selectedEnd
+        self.text.insert(contentsOf: "*", at: self.text.index(self.text.startIndex, offsetBy: selectedStart))
+        self.text.insert(contentsOf: "*", at: self.text.index(self.text.startIndex, offsetBy: selectedEnd + 1))
+        self.moveCursor(selectedEnd + 1)
+        self.highlighter?.applyStyles()
+    }
+
+    /// Adds 1 leading line break
+    @objc internal func unorderedListAction() {
+        let selectedStart = self.selectedStart
+        self.text.insert(contentsOf: "\n- ", at: self.text.index(self.text.startIndex, offsetBy: selectedStart))
+        self.moveCursor(selectedStart + 3)
+        self.highlighter?.applyStyles()
+    }
+
+    /// Adds 1 leading line break
+    @objc internal func orderedListAction() {
+        let selectedStart = self.selectedStart
+        self.text.insert(contentsOf: "\n1. ", at: self.text.index(self.text.startIndex, offsetBy: selectedStart))
+        self.moveCursor(selectedStart + 3)
+        self.highlighter?.applyStyles()
+    }
+
+    @objc internal func blockQuoteAction() {
+        let selectedStart = self.selectedStart
+        self.text.insert(contentsOf: "> ", at: self.text.index(self.text.startIndex, offsetBy: selectedStart))
+        self.highlighter?.applyStyles()
+    }
+
+    /// If text is selected, it is checked if it contains a link
+    ///   If a link is detected, the selected text is placed inside the braces
+    ///   If a link is not detected, the selected text is placed inside the parenthesis
+    /// Moves the cursor into the text bracket or parenthesis as applicable
+    @objc internal func linkAction() {
+        let selectedStart = self.selectedStart
+        let selectedEnd = self.selectedEnd
+        if self.containsLink {
+            self.text.insert(
+                contentsOf: "[](",
+                at: self.text.index(self.text.startIndex, offsetBy: selectedStart)
+            )
+            self.text.insert(
+                contentsOf: ")",
+                at: self.text.index(self.text.startIndex, offsetBy: selectedEnd + 3)
+            )
+            self.moveCursor(selectedStart + 1)
+        } else {
+            self.text.insert(
+                contentsOf: "[",
+                at: self.text.index(self.text.startIndex, offsetBy: selectedStart)
+            )
+            self.text.insert(
+                contentsOf: "]()",
+                at: self.text.index(self.text.startIndex, offsetBy: selectedEnd + 1)
+            )
+            self.moveCursor(selectedEnd + 3)
+        }
+        self.highlighter?.applyStyles()
+    }
+
+    /// If text is selected, moves the selected text inside the code block
+    /// Moves the cursor into the code block at the end of the selected text, if applicable
+    @objc internal func codeBlockAction() {
+        let selectedStart = self.selectedStart
+        let selectedEnd = self.selectedEnd
+        self.text.insert(
+            contentsOf: "```\n",
+            at: self.text.index(self.text.startIndex, offsetBy: selectedStart)
+        )
+        self.text.insert(
+            contentsOf: "\n```",
+            at: self.text.index(self.text.startIndex, offsetBy: selectedEnd + 4)
+        )
+        self.moveCursor(selectedEnd + 4)
+        self.highlighter?.applyStyles()
+    }
+}
+
+/// Extends UITextView to provide cursor helper methods
+extension UITextView {
+    /// Get selected text range start position
+    var selectedStart: Int {
+        guard let selectedRange = self.selectedTextRange else {
+            return 0
+        }
+        return self.offset(from: self.beginningOfDocument, to: selectedRange.start)
+    }
+
+    /// Get selected text range end position
+    var selectedEnd: Int {
+        guard let selectedRange = self.selectedTextRange else {
+            return 0
+        }
+        return self.offset(from: self.beginningOfDocument, to: selectedRange.end)
+    }
+
+    /// Move cursor by the given offset
+    func moveCursor(_ offset: Int = 1) {
+        guard let newPosition = self.position(from: self.beginningOfDocument, offset: offset) else {
+            return
+        }
+        self.selectedTextRange = self.textRange(from: newPosition, to: newPosition)
+    }
+
+    /// Validate if the selected text range contains a link
+    var containsLink: Bool {
+        guard let selectedTextRange = self.selectedTextRange,
+            let selectedText = self.text(in: selectedTextRange) else {
+            return false
+        }
+        do {
+            let detector = try NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
+            let matches = detector.matches(
+                in: selectedText, options: [],
+                range: NSRange(location: 0, length: selectedText.utf16.count)
+            )
+            return !matches.isEmpty
+        } catch {
+            return false
+        }
+    }
 }
 #else
 import AppKit

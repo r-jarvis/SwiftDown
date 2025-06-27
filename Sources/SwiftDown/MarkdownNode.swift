@@ -22,7 +22,7 @@ public struct MarkdownNode: Equatable {
     }
 
     // MARK: - MarkdownType
-    public enum MarkdownType: Equatable, CaseIterable {
+    public enum MarkdownType: Equatable, CaseIterable, Sendable {
         case quote
         case list
         case codeBlock

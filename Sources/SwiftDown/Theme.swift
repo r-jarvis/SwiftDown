@@ -10,8 +10,9 @@
 #elseif os(macOS)
     import AppKit
 #endif
+import SwiftUI
 
-public struct Theme {
+public struct Theme: @unchecked Sendable {
     // MARK: - BuildIn
     public enum BuiltIn: String {
         case defaultDark = "default-dark"
@@ -158,5 +159,17 @@ public struct Theme {
             return [:]
         }
         return attributes
+    }
+}
+
+// MARK: - SwiftUI Environment Support
+public struct MarkdownThemeKey: EnvironmentKey {
+    public static let defaultValue: Theme = Theme.BuiltIn.defaultDark.theme()
+}
+
+public extension EnvironmentValues {
+    var markdownTheme: Theme {
+        get { self[MarkdownThemeKey.self] }
+        set { self[MarkdownThemeKey.self] = newValue }
     }
 }

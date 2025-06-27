@@ -9,11 +9,11 @@
 import SwiftUI
 import SwiftDown
 
-struct TopToolbarExample: View {
+struct SwiftDownExample: View {
     @State private var text = """
 # Welcome to SwiftDown!
 
-This is a **markdown** editor with a SwiftUI toolbar at the top.
+This is a **markdown** editor with an always-visible toolbar.
 
 - List item 1
 - List item 2
@@ -30,38 +30,34 @@ Try the toolbar buttons above to format your text!
     var body: some View {
         NavigationView {
             VStack {
-                // New way: SwiftUI toolbar at top
                 SwiftDownEditor(text: $text)
-                    .hasTopToolbar(true)
                     .theme(Theme.BuiltIn.defaultDark.theme())
                     .padding()
             }
-            .navigationTitle("SwiftDown with Top Toolbar")
+            .navigationTitle("SwiftDown Editor")
         }
     }
 }
 
-struct KeyboardToolbarExample: View {
-    @State private var text = "# Traditional Editor\n\nThis uses the keyboard toolbar like before."
+struct SwiftDownLightExample: View {
+    @State private var text = "# Light Theme Example\n\nThis demonstrates the light theme with the always-visible toolbar."
     
     var body: some View {
         NavigationView {
             VStack {
-                // Original way: keyboard toolbar
                 SwiftDownEditor(text: $text)
-                    .hasKeyboardToolbar(true)
                     .theme(Theme.BuiltIn.defaultLight.theme())
                     .padding()
             }
-            .navigationTitle("SwiftDown with Keyboard Toolbar")
+            .navigationTitle("SwiftDown Light Theme")
         }
     }
 }
 
-#Preview("Top Toolbar") {
-    TopToolbarExample()
+#Preview("Dark Theme") {
+    SwiftDownExample()
 }
 
-#Preview("Keyboard Toolbar") {
-    KeyboardToolbarExample()
+#Preview("Light Theme") {
+    SwiftDownLightExample()
 }
