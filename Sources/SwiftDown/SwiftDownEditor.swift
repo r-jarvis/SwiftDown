@@ -104,52 +104,10 @@ struct SwiftDownTextView: UIViewRepresentable {
 
         // Store reference for markdown actions
         context.coordinator.swiftDownTextView = swiftDown
-<<<<<<< HEAD
-
-        // Create container with toolbar at top
-        let containerView = UIView()
-        
-        // Create SwiftUI toolbar as UIHostingController
-        let toolbar = MarkdownToolbar { action in
-            swiftDown.performMarkdownAction(action)
-        }
-        let toolbarController = UIHostingController(rootView: toolbar)
-        toolbarController.view.translatesAutoresizingMaskIntoConstraints = false
-        
-        // Add both views to container
-        containerView.addSubview(toolbarController.view)
-        containerView.addSubview(swiftDown)
-        
-        swiftDown.translatesAutoresizingMaskIntoConstraints = false
-        
-        // Set up constraints
-        NSLayoutConstraint.activate([
-            // Toolbar at top
-            toolbarController.view.topAnchor.constraint(equalTo: containerView.topAnchor),
-            toolbarController.view.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            toolbarController.view.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            toolbarController.view.heightAnchor.constraint(equalToConstant: 44),
-            
-            // Text editor below toolbar
-            swiftDown.topAnchor.constraint(equalTo: toolbarController.view.bottomAnchor),
-            swiftDown.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            swiftDown.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            swiftDown.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
-        ])
-        
-        return containerView
-    }
-
-    public func updateUIView(_ uiView: UIView, context: Context) {
-        // Get the SwiftDown text view from coordinator
-        guard let swiftDown = context.coordinator.swiftDownTextView else {
-            return
-=======
         
         // Update coordinator reference in parent
         DispatchQueue.main.async {
             coordinatorRef = context.coordinator
->>>>>>> 59e296d (Modernize SwiftDownEditor with environment themes and always-visible toolbar)
         }
         
         return swiftDown
